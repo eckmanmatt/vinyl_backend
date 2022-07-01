@@ -6,7 +6,6 @@ import { Record } from './record.model';
 
 @Injectable()
 export class RecordsService {
-  private records: Record[] = [];
 
   constructor(@InjectModel('Record') private readonly recordModel: Model<Record>) {}
 
@@ -55,9 +54,8 @@ export class RecordsService {
     updatedRecord.save();
   }
 
-  deleteRecord(recId: string){
-    const index = this.findRecord(recId)[1];
-    this.records.splice(index,1);
+  async deleteRecord(recId: string){
+    await this.recordModel.deleteOne({_id:recId}).exec();
   }
 
   private async findRecord(id:string): Promise<Record> {

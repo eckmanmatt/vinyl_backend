@@ -30,7 +30,7 @@ export class RecordsController {
     return records.map(rec => ({
       id: rec.id,
       title: rec.title,
-      artist: rec.artist, 
+      artist: rec.artist,
       year: rec.year,
       cover: rec.cover,
     }));
@@ -42,20 +42,20 @@ export class RecordsController {
   }
 
   @Patch(':id')
-  updateRecord(
+  async updateRecord(
     @Param('id') recId: string,
     @Body('title') recTitle:string,
     @Body('artist') recArtist: string,
     @Body('year') recYear: number,
     @Body('cover') recCover: string
   ){
-    this.recordsService.updateRecord(recId, recTitle, recArtist, recYear, recCover);
+    await this.recordsService.updateRecord(recId, recTitle, recArtist, recYear, recCover);
       return null;
   }
 
   @Delete(':id')
-  removeProduct(@Param('id') recId: string,){
-    this.recordsService.deleteRecord(recId)
+  async removeProduct(@Param('id') recId: string,){
+    await this.recordsService.deleteRecord(recId)
     return null;
   }
 
