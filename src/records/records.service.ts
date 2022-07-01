@@ -1,30 +1,45 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { Record } from './record.model'
+import { Record } from './record.model';
 
 @Injectable()
 export class RecordsService {
   private records: Record[] = [];
 
-  insertRecord(title: string, artist: string, year:number, cover:string) {
+  constructor(@InjectModel('Record') private readonly recordModel: Model<Record>) {}
+
+  async insertRecord(title: string, artist: string, year:number, cover:string) {
     const recId = Math.random().toString();
-    const newRecord = new Record(recId, title, artist, year, cover);
-    this.records.push(newRecord);
-    return recId;
+    const newRecord = new this.recordModel({
+      title:title,
+      artist:artist,
+      year:year,
+      cover:cover
+    });
+    const result = await newRecord.save()
+    return result.id as string;
   }
 
-  getRecords(){
-    return [...this.records];
+  async getRecords(){
+    const records = await this.recordModel.find().exec();
+    return records as Record[];
   }
 
-  getSingleRecord(recordId: string){
-    const record = this.findRecord(recordId)[0]
-    return {...record};
+  async getSingleRecord(recordId: string){
+    const record = await this.findRecord(recordId)
+    return {
+      id:record.id,
+      title: record.title,
+      artist: record.artist,
+      year: record.year,
+      cover: record.cover,
+    };
   }
 
-  updateRecord(recordId:string, title: string, artist: string, year: number, cover: string){
-    const [record,index] = this.findRecord(recordId)
-    const updatedRecord = {...record};
+  async updateRecord(recordId:string, title: string, artist: string, year: number, cover: string){
+    const updatedRecord = await this.findRecord(recordId);
     if(title){
       updatedRecord.title = title
     }
@@ -37,7 +52,7 @@ export class RecordsService {
     if(cover){
       updatedRecord.cover = cover
     }
-    this.records[index] = updatedRecord;
+    updatedRecord.save();
   }
 
   deleteRecord(recId: string){
@@ -45,14 +60,16 @@ export class RecordsService {
     this.records.splice(index,1);
   }
 
-  private findRecord(id:string):[Record, number]{
-    const recordIndex = this.records.findIndex(rec => rec.id === id);
-    const record = this.records[recordIndex];
+  private async findRecord(id:string): Promise<Record> {
+    let record
+    try{
+      record = await this.recordModel.findById(id);
+    }catch(error){
+      throw new NotFoundException('Record Not Found.');
+    }
     if (!record){
       throw new NotFoundException('Record Not Found.');
     }
-    return [record,recordIndex];
+    return record;
   }
-
-
 }

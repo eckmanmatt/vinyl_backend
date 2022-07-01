@@ -9,13 +9,13 @@ export class RecordsController {
   }
 
   @Post()
-  addRecord(
+  async addRecord(
     @Body('title') recTitle: string,
     @Body('artist') recArtist: string,
     @Body('year') recYear: number,
     @Body('cover') recCover: string
-  ): any {
-    const generatedId = this.recordsService.insertRecord(
+  ): Promise<any> {
+    const generatedId = await this.recordsService.insertRecord(
       recTitle,
       recArtist,
       recYear,
@@ -25,8 +25,15 @@ export class RecordsController {
   }
 
   @Get()
-  getAllRecords(){
-    return this.recordsService.getRecords();
+  async getAllRecords(){
+    const records = await this.recordsService.getRecords();
+    return records.map(rec => ({
+      id: rec.id,
+      title: rec.title,
+      artist: rec.artist, 
+      year: rec.year,
+      cover: rec.cover,
+    }));
   }
 
   @Get(':id')
